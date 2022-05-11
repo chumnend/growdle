@@ -5,7 +5,6 @@ import logo from '../helpers/assets/logo.svg'
 import phaserGame from '../helpers/phaser/PhaserGame';
 import MainGameScene from '../helpers/phaser/scenes/MainGameScene';
 
-
 const App = () => {
   useEffect(() => {
     phaserGame.scene.keys.MainGameScene as MainGameScene;
