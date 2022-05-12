@@ -1,15 +1,15 @@
 import { useEffect } from 'react';
 
+import logo from '../../helpers/assets/logo.svg';
+import phaserGame from '../../helpers/phaser/PhaserGame';
+import MainGameScene from '../../helpers/phaser/scenes/MainGameScene';
 import './App.css';
-import logo from '../helpers/assets/logo.svg'
-import phaserGame from '../helpers/phaser/PhaserGame';
-import MainGameScene from '../helpers/phaser/scenes/MainGameScene';
 
 const App = () => {
   useEffect(() => {
     phaserGame.scene.keys.MainGameScene as MainGameScene;
-  }, [])
-  
+  }, []);
+
   return (
     <div className="App">
       <header className="App-header">
@@ -18,6 +18,6 @@ const App = () => {
       </header>
     </div>
   );
-}
+};
 
-export default App
+export default App;
