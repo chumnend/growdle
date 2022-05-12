@@ -1,7 +1,6 @@
 {
-  "name": "growdle",
+  "name": "@chumnend/growdle",
   "version": "0.1.0",
-  "private": true,
   "dependencies": {
     "@changesets/cli": "^2.22.0",
     "@testing-library/jest-dom": "^5.14.1",
@@ -49,5 +48,12 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/chumnend/growdle.git"
+  },
+  "publishConfig": {
+    "registry":"https://npm.pkg.github.com"
   }
 }
