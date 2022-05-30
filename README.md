@@ -1,7 +1,7 @@
 # Growdle
 
 ## About 
-Growdle is a blockchain based idle game.
+TBD
 
 ### Demo
 TBD
@@ -9,9 +9,27 @@ TBD
 ### Built With
 - Typescript
 - React
+- Yarn
+- Phaser
 
 ## Getting Started
-TBD
+1) Install dependencies,
+
+```
+yarn
+```
+
+2) Copy the .env.example file and edit as desired,
+
+```
+cp .env.example .env
+```
+
+3) Start the application,
+
+```
+yarn start
+```
 
 ## License
 TBD
