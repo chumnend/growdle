@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 
 import phaserGame from '../../helpers/phaser';
-import MainGameScene from '../../helpers/scenes/MainGameScene';
+import MainGameScene from '../../helpers/phaser/scenes/MainGameScene';
 
 import './App.css';
 
