@@ -10,7 +10,7 @@ TBD
 - Typescript
 - React
 - Yarn
-- Phaser
+- Phaser 3
 
 ## Getting Started
 1) Install dependencies,

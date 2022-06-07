@@ -1,0 +1,1 @@
+Each sprite has a tile background where 1 block = 8px
