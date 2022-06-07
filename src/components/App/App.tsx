@@ -1,13 +1,13 @@
 import { useEffect } from 'react';
 
 import phaserGame from '../../helpers/phaser';
-import MainGameScene from '../../helpers/phaser/scenes/MainGameScene';
+import MainScene from '../../helpers/phaser/scenes/MainScene';
 
 import './App.css';
 
 const App = () => {
   useEffect(() => {
-    phaserGame.scene.keys.MainGameScene as MainGameScene;
+    phaserGame.scene.keys.MainScene as MainScene;
   }, []);
 
   return <div className="App"></div>;

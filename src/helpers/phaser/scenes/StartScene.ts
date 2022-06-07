@@ -74,10 +74,14 @@ class StartScene extends Phaser.Scene {
 
   startGame() {
     console.log('starting new game');
+
+    this.scene.start('MainScene');
   }
 
   loadGame() {
     console.log('loading saved game');
+
+    this.scene.start('MainScene');
   }
 }
 
