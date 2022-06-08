@@ -3,6 +3,12 @@
 ## About 
 TBD
 
+All assets come from Opengameart.org
+
+Backgrounds attributed to ansimuz
+Monster sprites attributed to "Hero of Allacrost - http://www.allacrost.org" 
+RPG Icons attributed to Henrique Lazarini (7Soul1)
+
 ### Demo
 TBD
 
