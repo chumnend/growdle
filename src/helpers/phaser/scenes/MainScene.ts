@@ -38,11 +38,11 @@ class MainScene extends Phaser.Scene {
   }
 
   preload() {
+    // get the center of the screen
     this.screenCenterX = this.cameras.main.worldView.x + this.cameras.main.width / 2;
     this.screenCenterY = this.cameras.main.worldView.y + this.cameras.main.height / 2;
 
-    // preloads monster sprites using monsterData
-    this.loadMonsterSprites();
+    this.preloadMonsterSprites();
   }
 
   create() {
@@ -62,27 +62,30 @@ class MainScene extends Phaser.Scene {
 
       // make the sprite clickable
       monster.setInteractive();
-      monster.on('pointerdown', this.onClickMonster.bind(this));
+      monster.on('pointerdown', this.getRandomMonster.bind(this));
     });
 
-    this.currentMonster = this.monsters.getChildren()[
-      Phaser.Math.Between(0, this.monsterData.length - 1)
-    ] as Phaser.GameObjects.Sprite;
-    this.currentMonster.setPosition(this.screenCenterX + this.currentMonster.width / 2, this.screenCenterY);
-    this.currentMonsterText = this.add.text(this.screenCenterX - 200, this.screenCenterY, this.lookupMonsterName());
+    // load the first monster into the game
+    this.getRandomMonster();
   }
 
-  // loads sprites using monster data
-  loadMonsterSprites() {
+  // preloads sprites using monster data
+  preloadMonsterSprites() {
     this.monsterData.forEach((monster) => {
       this.load.image(monster.image, `assets/sprites/${monster.image}.png`);
     });
   }
 
-  // when monster is clicked, replaces current monster with random monster
-  onClickMonster() {
-    // reset current monster
-    this.currentMonster?.setPosition(2000, this.screenCenterY);
+  lookupMonsterName(): string {
+    const data = this.monsterData.find((monster) => monster.image === this.currentMonster?.texture.key);
+    return data?.name ?? 'unknown';
+  }
+
+  getRandomMonster() {
+    if (this.currentMonster) {
+      // reset current monster
+      this.currentMonster.setPosition(2000, this.screenCenterY);
+    }
 
     // pick new monster
     this.currentMonster = this.monsters?.getChildren()[
@@ -93,11 +96,6 @@ class MainScene extends Phaser.Scene {
     this.currentMonster.setPosition(this.screenCenterX + this.currentMonster.width / 2, this.screenCenterY);
     this.currentMonsterText?.destroy();
     this.currentMonsterText = this.add.text(this.screenCenterX - 200, this.screenCenterY, this.lookupMonsterName());
-  }
-
-  lookupMonsterName(): string {
-    const data = this.monsterData.find((monster) => monster.image === this.currentMonster?.texture.key);
-    return data?.name ?? 'unknown';
   }
 }
 
