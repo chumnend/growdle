@@ -9,8 +9,6 @@ class StartScene extends Phaser.Scene {
   }
 
   async preload() {
-    console.log('preloading StartScene');
-
     this.screenCenterX = this.cameras.main.worldView.x + this.cameras.main.width / 2;
     this.screenCenterY = this.cameras.main.worldView.y + this.cameras.main.height / 2;
 
@@ -21,8 +19,6 @@ class StartScene extends Phaser.Scene {
   }
 
   create() {
-    console.log('creating StartScene');
-
     // background
     const bgGroup = this.add.group();
     const bg1 = bgGroup.create(this.screenCenterX, this.screenCenterY, 'forest-back');
@@ -77,14 +73,10 @@ class StartScene extends Phaser.Scene {
   }
 
   startGame() {
-    console.log('starting new game');
-
     this.scene.start('MainScene');
   }
 
   loadGame() {
-    console.log('loading saved game');
-
     this.scene.start('MainScene');
   }
 }

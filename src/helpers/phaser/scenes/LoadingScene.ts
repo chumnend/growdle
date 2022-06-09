@@ -5,13 +5,7 @@ class LoadingScene extends Phaser.Scene {
     super('LoadingScene');
   }
 
-  preload() {
-    console.log('preloading LoadingScene');
-  }
-
   create() {
-    console.log('creating LoadingScene');
-
     this.scene.start('StartScene');
   }
 }

@@ -4,6 +4,7 @@ class MainScene extends Phaser.Scene {
   private screenCenterX: number;
   private screenCenterY: number;
   private currentMonster: Phaser.GameObjects.Sprite | null;
+  private currentMonsterText: Phaser.GameObjects.Text | null;
   private monsters: Phaser.GameObjects.Group | null;
 
   // monster data based on sprites found in /public
@@ -32,6 +33,7 @@ class MainScene extends Phaser.Scene {
     this.screenCenterX = 0;
     this.screenCenterY = 0;
     this.currentMonster = null;
+    this.currentMonsterText = null;
     this.monsters = null;
   }
 
@@ -66,11 +68,11 @@ class MainScene extends Phaser.Scene {
     this.currentMonster = this.monsters.getChildren()[
       Phaser.Math.Between(0, this.monsterData.length - 1)
     ] as Phaser.GameObjects.Sprite;
-    this.currentMonster.setPosition(this.screenCenterX + 100, this.screenCenterY);
-    this.add.text(
-      this.screenCenterX - this.currentMonster.width / 2,
-      this.screenCenterY + this.currentMonster.height / 2,
-      '<NAME>',
+    this.currentMonster.setPosition(this.screenCenterX + this.currentMonster.width / 2, this.screenCenterY);
+    this.currentMonsterText = this.add.text(
+      this.screenCenterX - 200,
+      this.screenCenterY,
+      this.currentMonster.texture.key,
     );
   }
 
@@ -92,11 +94,12 @@ class MainScene extends Phaser.Scene {
     ] as Phaser.GameObjects.Sprite;
 
     // move new monster to center of the screen
-    this.currentMonster.setPosition(this.screenCenterX + 100, this.screenCenterY);
-    this.add.text(
-      this.screenCenterX - this.currentMonster.width / 2,
-      this.screenCenterY + this.currentMonster.height / 2,
-      '<NAME>',
+    this.currentMonster.setPosition(this.screenCenterX + this.currentMonster.width / 2, this.screenCenterY);
+    this.currentMonsterText?.destroy();
+    this.currentMonsterText = this.add.text(
+      this.screenCenterX - 200,
+      this.screenCenterY,
+      this.currentMonster.texture.key,
     );
   }
 }
