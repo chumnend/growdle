@@ -69,11 +69,7 @@ class MainScene extends Phaser.Scene {
       Phaser.Math.Between(0, this.monsterData.length - 1)
     ] as Phaser.GameObjects.Sprite;
     this.currentMonster.setPosition(this.screenCenterX + this.currentMonster.width / 2, this.screenCenterY);
-    this.currentMonsterText = this.add.text(
-      this.screenCenterX - 200,
-      this.screenCenterY,
-      this.currentMonster.texture.key,
-    );
+    this.currentMonsterText = this.add.text(this.screenCenterX - 200, this.screenCenterY, this.lookupMonsterName());
   }
 
   // loads sprites using monster data
@@ -96,11 +92,12 @@ class MainScene extends Phaser.Scene {
     // move new monster to center of the screen
     this.currentMonster.setPosition(this.screenCenterX + this.currentMonster.width / 2, this.screenCenterY);
     this.currentMonsterText?.destroy();
-    this.currentMonsterText = this.add.text(
-      this.screenCenterX - 200,
-      this.screenCenterY,
-      this.currentMonster.texture.key,
-    );
+    this.currentMonsterText = this.add.text(this.screenCenterX - 200, this.screenCenterY, this.lookupMonsterName());
+  }
+
+  lookupMonsterName(): string {
+    const data = this.monsterData.find((monster) => monster.image === this.currentMonster?.texture.key);
+    return data?.name ?? 'unknown';
   }
 }
 
