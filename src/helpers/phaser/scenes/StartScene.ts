@@ -33,7 +33,7 @@ class StartScene extends Phaser.Scene {
 
     // title
     this.add
-      .text(this.screenCenterX, this.screenCenterY - 200, 'Growdle: An Idle Game', {
+      .text(this.screenCenterX, this.screenCenterY - 200, 'Growdle: A Clicker Game', {
         fontFamily: 'bebas',
         fontSize: '65px',
         color: '#fff',

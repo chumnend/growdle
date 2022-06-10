@@ -1,30 +1,48 @@
 import Phaser from 'phaser';
 
+type Player = {
+  /** the amount of damage the player character does */
+  clickDmg: number;
+  /** the amount of gold earned */
+  gold: number;
+};
+
+type Monster = {
+  /** the name of the monster */
+  name: string;
+  /** the name of the sprite for the monster */
+  image: string;
+  /** the maximum health of the monster */
+  maxHealth: number;
+};
+
 class MainScene extends Phaser.Scene {
   private screenCenterX: number;
   private screenCenterY: number;
   private currentMonster: Phaser.GameObjects.Sprite | null;
-  private currentMonsterText: Phaser.GameObjects.Text | null;
+  private currentMonsterNameText: Phaser.GameObjects.Text | null;
+  private currentMonsterHealthText: Phaser.GameObjects.Text | null;
   private monsters: Phaser.GameObjects.Group | null;
+  private player: Player;
 
   // monster data based on sprites found in /public
-  private monsterData = [
-    { name: 'Aerocephal', image: 'aerocephal' },
-    { name: 'Arcana Drake', image: 'arcana_drake' },
-    { name: 'Aurum Drakueli', image: 'aurum-drakueli' },
-    { name: 'Bat', image: 'bat' },
-    { name: 'Daemarbora', image: 'daemarbora' },
-    { name: 'Deceleon', image: 'deceleon' },
-    { name: 'Demonic Essence', image: 'demonic_essence' },
-    { name: 'Dune Crawler', image: 'dune_crawler' },
-    { name: 'Green Slime', image: 'green_slime' },
-    { name: 'Nagaruda', image: 'nagaruda' },
-    { name: 'Rat', image: 'rat' },
-    { name: 'Scorpion', image: 'scorpion' },
-    { name: 'Skeleton', image: 'skeleton' },
-    { name: 'Snake', image: 'snake' },
-    { name: 'Spider', image: 'spider' },
-    { name: 'Stygian Lizard', image: 'stygian_lizard' },
+  private monsterData: Monster[] = [
+    { name: 'Aerocephal', image: 'aerocephal', maxHealth: 10 },
+    { name: 'Arcana Drake', image: 'arcana_drake', maxHealth: 20 },
+    { name: 'Aurum Drakueli', image: 'aurum-drakueli', maxHealth: 30 },
+    { name: 'Bat', image: 'bat', maxHealth: 5 },
+    { name: 'Daemarbora', image: 'daemarbora', maxHealth: 10 },
+    { name: 'Deceleon', image: 'deceleon', maxHealth: 10 },
+    { name: 'Demonic Essence', image: 'demonic_essence', maxHealth: 15 },
+    { name: 'Dune Crawler', image: 'dune_crawler', maxHealth: 8 },
+    { name: 'Green Slime', image: 'green_slime', maxHealth: 3 },
+    { name: 'Nagaruda', image: 'nagaruda', maxHealth: 13 },
+    { name: 'Rat', image: 'rat', maxHealth: 2 },
+    { name: 'Scorpion', image: 'scorpion', maxHealth: 2 },
+    { name: 'Skeleton', image: 'skeleton', maxHealth: 6 },
+    { name: 'Snake', image: 'snake', maxHealth: 4 },
+    { name: 'Spider', image: 'spider', maxHealth: 4 },
+    { name: 'Stygian Lizard', image: 'stygian_lizard', maxHealth: 20 },
   ];
 
   constructor() {
@@ -33,8 +51,13 @@ class MainScene extends Phaser.Scene {
     this.screenCenterX = 0;
     this.screenCenterY = 0;
     this.currentMonster = null;
-    this.currentMonsterText = null;
+    this.currentMonsterNameText = null;
+    this.currentMonsterHealthText = null;
     this.monsters = null;
+    this.player = {
+      clickDmg: 1,
+      gold: 0,
+    };
   }
 
   preload() {
@@ -57,12 +80,19 @@ class MainScene extends Phaser.Scene {
       monster.frame.cutWidth = monster.frame.width;
       monster.frame.updateUVs();
 
+      // add data to sprite
+      monster.name = data.name;
+      monster.data = {
+        maxHealth: data.maxHealth,
+        health: data.maxHealth,
+      };
+
       // move anchor to center of image
       monster.setOrigin(0.5, 0.5);
 
       // make the sprite clickable
       monster.setInteractive();
-      monster.on('pointerdown', this.getRandomMonster.bind(this));
+      monster.on('pointerdown', this.onClickMonster.bind(this));
     });
 
     // load the first monster into the game
@@ -76,11 +106,6 @@ class MainScene extends Phaser.Scene {
     });
   }
 
-  lookupMonsterName(): string {
-    const data = this.monsterData.find((monster) => monster.image === this.currentMonster?.texture.key);
-    return data?.name ?? 'unknown';
-  }
-
   getRandomMonster() {
     if (this.currentMonster) {
       // reset current monster
@@ -92,10 +117,57 @@ class MainScene extends Phaser.Scene {
       Phaser.Math.Between(0, this.monsterData.length - 1)
     ] as Phaser.GameObjects.Sprite;
 
+    // get monster data from sprite
+    // eslint-disable-next-line
+    const data = this.currentMonster.data as any;
+
+    // revives the monster if dead
+    data.health = data.maxHealth;
+    this.currentMonster.data = data;
+
     // move new monster to center of the screen
     this.currentMonster.setPosition(this.screenCenterX + this.currentMonster.width / 2, this.screenCenterY);
-    this.currentMonsterText?.destroy();
-    this.currentMonsterText = this.add.text(this.screenCenterX - 200, this.screenCenterY, this.lookupMonsterName());
+    this.currentMonsterNameText?.destroy();
+    this.currentMonsterNameText = this.add.text(
+      this.screenCenterX - 200,
+      this.screenCenterY - 40,
+      this.currentMonster.name,
+      {
+        font: '24px Arial Black',
+        color: '#fff',
+        strokeThickness: 2,
+      },
+    );
+    this.currentMonsterHealthText?.destroy();
+    this.currentMonsterHealthText = this.add.text(
+      this.screenCenterX - 200,
+      this.screenCenterY + 40,
+      data.health + ' HP',
+      {
+        font: '16px Arial Black',
+        color: '#ff0000',
+        strokeThickness: 2,
+      },
+    );
+  }
+
+  onClickMonster() {
+    if (this.currentMonster) {
+      // eslint-disable-next-line
+      const updatedData = this.currentMonster?.data as any; // hacky way to handle unknown DataManager
+
+      // on click, player deals damage to the monster
+      updatedData.health = updatedData.health - this.player.clickDmg;
+      this.currentMonsterHealthText?.setText(updatedData.health + ' HP');
+
+      // check if dead
+      if (updatedData.health <= 0) {
+        // if died, load new monster
+        this.getRandomMonster();
+      } else {
+        this.currentMonster.data = updatedData;
+      }
+    }
   }
 }
 
