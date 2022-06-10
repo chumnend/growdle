@@ -71,6 +71,21 @@ class MainScene extends Phaser.Scene {
   }
 
   create() {
+    this.createMonsterPool();
+    this.createDmgTextPool();
+
+    // load the first monster into the game
+    this.getRandomMonster();
+  }
+
+  // preloads sprites using monster data
+  preloadMonsterSprites() {
+    this.monsterData.forEach((monster) => {
+      this.load.image(monster.image, `assets/sprites/${monster.image}.png`);
+    });
+  }
+
+  createMonsterPool() {
     this.monsterPool = this.add.group();
     this.monsterData.forEach((data) => {
       // create sprite for each, off screen
@@ -96,7 +111,9 @@ class MainScene extends Phaser.Scene {
       monster.setInteractive();
       monster.on('pointerdown', this.onClickMonster.bind(this));
     });
+  }
 
+  createDmgTextPool() {
     this.dmgTextPool = this.add.group();
     let dmgText;
     for (let i = 0; i < 50; i++) {
@@ -109,16 +126,6 @@ class MainScene extends Phaser.Scene {
       dmgText.active = false;
       this.dmgTextPool?.add(dmgText);
     }
-
-    // load the first monster into the game
-    this.getRandomMonster();
-  }
-
-  // preloads sprites using monster data
-  preloadMonsterSprites() {
-    this.monsterData.forEach((monster) => {
-      this.load.image(monster.image, `assets/sprites/${monster.image}.png`);
-    });
   }
 
   getRandomMonster() {
