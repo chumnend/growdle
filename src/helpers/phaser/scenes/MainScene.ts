@@ -22,7 +22,8 @@ class MainScene extends Phaser.Scene {
   private currentMonster: Phaser.GameObjects.Sprite | null;
   private currentMonsterNameText: Phaser.GameObjects.Text | null;
   private currentMonsterHealthText: Phaser.GameObjects.Text | null;
-  private monsters: Phaser.GameObjects.Group | null;
+  private monsterPool: Phaser.GameObjects.Group | null;
+  private dmgTextPool: Phaser.GameObjects.Group | null;
   private player: Player;
 
   // monster data based on sprites found in /public
@@ -53,7 +54,8 @@ class MainScene extends Phaser.Scene {
     this.currentMonster = null;
     this.currentMonsterNameText = null;
     this.currentMonsterHealthText = null;
-    this.monsters = null;
+    this.monsterPool = null;
+    this.dmgTextPool = null;
     this.player = {
       clickDmg: 1,
       gold: 0,
@@ -69,10 +71,10 @@ class MainScene extends Phaser.Scene {
   }
 
   create() {
-    this.monsters = this.add.group();
+    this.monsterPool = this.add.group();
     this.monsterData.forEach((data) => {
       // create sprite for each, off screen
-      const monster = this.monsters?.create(2000, this.screenCenterY, data.image);
+      const monster = this.monsterPool?.create(2000, this.screenCenterY, data.image);
 
       // each sprite is saved as set of 4, we need to only load 1
       monster.frame.width = monster.frame.width / 4;
@@ -95,6 +97,19 @@ class MainScene extends Phaser.Scene {
       monster.on('pointerdown', this.onClickMonster.bind(this));
     });
 
+    this.dmgTextPool = this.add.group();
+    let dmgText;
+    for (let i = 0; i < 50; i++) {
+      dmgText = this.add.text(0, 0, '1', {
+        font: '64px Arial Black',
+        color: '#fff',
+        strokeThickness: 2,
+      });
+      dmgText.alpha = 0;
+      dmgText.active = false;
+      this.dmgTextPool?.add(dmgText);
+    }
+
     // load the first monster into the game
     this.getRandomMonster();
   }
@@ -113,7 +128,7 @@ class MainScene extends Phaser.Scene {
     }
 
     // pick new monster
-    this.currentMonster = this.monsters?.getChildren()[
+    this.currentMonster = this.monsterPool?.getChildren()[
       Phaser.Math.Between(0, this.monsterData.length - 1)
     ] as Phaser.GameObjects.Sprite;
 
@@ -158,7 +173,27 @@ class MainScene extends Phaser.Scene {
 
       // on click, player deals damage to the monster
       updatedData.health = updatedData.health - this.player.clickDmg;
-      this.currentMonsterHealthText?.setText(updatedData.health + ' HP');
+      if (this.currentMonsterHealthText) {
+        this.currentMonsterHealthText.text = updatedData.health + ' HP';
+      }
+
+      const dmgText = this.dmgTextPool?.getFirst(false);
+      if (dmgText) {
+        dmgText.text = this.player.clickDmg;
+        dmgText.alpha = 1;
+        dmgText.active = true;
+        this.tweens.add({
+          targets: dmgText,
+          alpha: 0,
+          duration: 1000,
+          ease: 'Cubic.easeOut',
+          x: Phaser.Math.Between(100, 700),
+          y: 100,
+          onComplete: (_, targets: Phaser.GameObjects.Sprite[]) => {
+            targets[0].destroy();
+          },
+        });
+      }
 
       // check if dead
       if (updatedData.health <= 0) {
