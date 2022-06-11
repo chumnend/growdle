@@ -23,8 +23,10 @@ class MainScene extends Phaser.Scene {
   private currentMonsterNameText: Phaser.GameObjects.Text | null;
   private currentMonsterHealthText: Phaser.GameObjects.Text | null;
   private monsterPool: Phaser.GameObjects.Group | null;
+  private coinPool: Phaser.GameObjects.Group | null;
   private dmgTextPool: Phaser.GameObjects.Group | null;
   private player: Player;
+  private playerGoldText: Phaser.GameObjects.Text | null;
 
   // monster data based on sprites found in /public
   private monsterData: Monster[] = [
@@ -55,11 +57,13 @@ class MainScene extends Phaser.Scene {
     this.currentMonsterNameText = null;
     this.currentMonsterHealthText = null;
     this.monsterPool = null;
+    this.coinPool = null;
     this.dmgTextPool = null;
     this.player = {
       clickDmg: 1,
       gold: 0,
     };
+    this.playerGoldText = null;
   }
 
   preload() {
@@ -67,12 +71,21 @@ class MainScene extends Phaser.Scene {
     this.screenCenterX = this.cameras.main.worldView.x + this.cameras.main.width / 2;
     this.screenCenterY = this.cameras.main.worldView.y + this.cameras.main.height / 2;
 
+    // load game assets
     this.preloadMonsterSprites();
+    this.load.image('gold_coin', '/assets/icons/I_GoldCoin.png');
   }
 
   create() {
     this.createMonsterPool();
+    this.createCoinPool();
     this.createDmgTextPool();
+
+    this.playerGoldText = this.add.text(30, 30, 'Gold: ' + this.player.gold, {
+      font: '24px Arial Black',
+      color: '#fff',
+      strokeThickness: 2,
+    });
 
     // load the first monster into the game
     this.getRandomMonster();
@@ -113,6 +126,23 @@ class MainScene extends Phaser.Scene {
     });
   }
 
+  createCoinPool() {
+    this.coinPool = this.add.group();
+    this.coinPool.createMultiple({
+      key: 'gold_coin',
+      quantity: 50,
+      setXY: {
+        x: 2000,
+        y: 0,
+      },
+    });
+    this.coinPool.children.each((coin) => {
+      coin.active = false;
+      coin.setInteractive();
+      coin.on('pointerdown', this.onClickCoin.bind(this, coin));
+    });
+  }
+
   createDmgTextPool() {
     this.dmgTextPool = this.add.group();
     let dmgText;
@@ -150,6 +180,8 @@ class MainScene extends Phaser.Scene {
     // move new monster to center of the screen
     this.currentMonster.setPosition(this.screenCenterX + this.currentMonster.width / 2, this.screenCenterY);
     this.currentMonsterNameText?.destroy();
+
+    // update monster information
     this.currentMonsterNameText = this.add.text(
       this.screenCenterX - 200,
       this.screenCenterY - 40,
@@ -204,12 +236,26 @@ class MainScene extends Phaser.Scene {
 
       // check if dead
       if (updatedData.health <= 0) {
+        // add coin to world
+        const coin = this.coinPool?.getFirst(false);
+        coin.active = true;
+        coin.x = this.screenCenterX + Phaser.Math.Between(-100, 100);
+        coin.y = this.screenCenterY + Phaser.Math.Between(-100, 100);
+
         // if died, load new monster
         this.getRandomMonster();
       } else {
         this.currentMonster.data = updatedData;
       }
     }
+  }
+
+  onClickCoin(coin: Phaser.GameObjects.GameObject) {
+    this.player.gold += 1;
+    if (this.playerGoldText) {
+      this.playerGoldText.text = 'Gold: ' + this.player.gold;
+    }
+    coin.destroy();
   }
 }
 
