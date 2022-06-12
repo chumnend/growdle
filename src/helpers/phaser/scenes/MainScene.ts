@@ -87,6 +87,17 @@ class MainScene extends Phaser.Scene {
       strokeThickness: 2,
     });
 
+    // create upgrades panel
+    const upgradePanelTexture = this.textures.createCanvas('upgradePanel', 200, 400); // origin is center
+    upgradePanelTexture.context.fillStyle = '#9a783d';
+    upgradePanelTexture.context.strokeStyle = '#35371c';
+    upgradePanelTexture.context.lineWidth = 12;
+    upgradePanelTexture.context.fillRect(0, 0, 250, 400);
+    upgradePanelTexture.context.strokeRect(0, 0, 250, 400);
+    upgradePanelTexture.refresh();
+
+    this.add.image(110, 280, 'upgradePanel');
+
     // load the first monster into the game
     this.getRandomMonster();
   }
@@ -178,12 +189,12 @@ class MainScene extends Phaser.Scene {
     this.currentMonster.data = data;
 
     // move new monster to center of the screen
-    this.currentMonster.setPosition(this.screenCenterX + this.currentMonster.width / 2, this.screenCenterY);
+    this.currentMonster.setPosition(this.screenCenterX + this.currentMonster.width / 2 + 100, this.screenCenterY);
     this.currentMonsterNameText?.destroy();
 
     // update monster information
     this.currentMonsterNameText = this.add.text(
-      this.screenCenterX - 200,
+      this.screenCenterX - 100,
       this.screenCenterY - 40,
       this.currentMonster.name,
       {
@@ -194,7 +205,7 @@ class MainScene extends Phaser.Scene {
     );
     this.currentMonsterHealthText?.destroy();
     this.currentMonsterHealthText = this.add.text(
-      this.screenCenterX - 200,
+      this.screenCenterX - 100,
       this.screenCenterY + 40,
       data.health + ' HP',
       {
@@ -239,7 +250,7 @@ class MainScene extends Phaser.Scene {
         // add coin to world
         const coin = this.coinPool?.getFirst(false);
         coin.active = true;
-        coin.x = this.screenCenterX + Phaser.Math.Between(-100, 100);
+        coin.x = this.screenCenterX + Phaser.Math.Between(0, 200);
         coin.y = this.screenCenterY + Phaser.Math.Between(-100, 100);
 
         // set coin to auto click
