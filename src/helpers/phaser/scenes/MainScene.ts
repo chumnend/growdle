@@ -242,6 +242,9 @@ class MainScene extends Phaser.Scene {
         coin.x = this.screenCenterX + Phaser.Math.Between(-100, 100);
         coin.y = this.screenCenterY + Phaser.Math.Between(-100, 100);
 
+        // set coin to auto click
+        this.time.delayedCall(3000, () => this.onClickCoin(coin));
+
         // if died, load new monster
         this.getRandomMonster();
       } else {
@@ -251,6 +254,10 @@ class MainScene extends Phaser.Scene {
   }
 
   onClickCoin(coin: Phaser.GameObjects.GameObject) {
+    if (!coin) {
+      return;
+    }
+
     this.player.gold += 1;
     if (this.playerGoldText) {
       this.playerGoldText.text = 'Gold: ' + this.player.gold;
