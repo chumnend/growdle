@@ -42,3 +42,8 @@ TBD
 
 ## Contact
 Nicholas Chumney - [nicholas.chumney@outlook.com](nicholas.chumney@outlook.com)
+
+## References
+- [Phaser Documentation](https://photonstorm.github.io/phaser3-docs/)
+- [Notes of Phaser 3](https://rexrainbow.github.io/phaser3-rex-notes/docs/site/)
+- [Phaser Tutorial – How to Create an Idle Clicker Game](https://gamedevacademy.org/phaser-tutorial-how-to-create-an-idle-clicker-game/)
