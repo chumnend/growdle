@@ -25,8 +25,10 @@ class MainScene extends Phaser.Scene {
   private monsterPool: Phaser.GameObjects.Group | null;
   private coinPool: Phaser.GameObjects.Group | null;
   private dmgTextPool: Phaser.GameObjects.Group | null;
+  private upgradeButtons: Phaser.GameObjects.Group | null;
   private player: Player;
   private playerGoldText: Phaser.GameObjects.Text | null;
+  private playerDmgText: Phaser.GameObjects.Text | null;
 
   // monster data based on sprites found in /public
   private monsterData: Monster[] = [
@@ -59,11 +61,13 @@ class MainScene extends Phaser.Scene {
     this.monsterPool = null;
     this.coinPool = null;
     this.dmgTextPool = null;
+    this.upgradeButtons = null;
     this.player = {
       clickDmg: 1,
       gold: 0,
     };
     this.playerGoldText = null;
+    this.playerDmgText = null;
   }
 
   preload() {
@@ -74,6 +78,25 @@ class MainScene extends Phaser.Scene {
     // load game assets
     this.preloadMonsterSprites();
     this.load.image('gold_coin', '/assets/icons/I_GoldCoin.png');
+    this.load.image('dagger', '/assets/icons/W_Dagger002.png');
+
+    // create upgrade panel texture
+    const upgradePanelTexture = this.textures.createCanvas('upgradePanel', 200, 400); // origin is center
+    upgradePanelTexture.context.fillStyle = '#9a783d';
+    upgradePanelTexture.context.strokeStyle = '#35371c';
+    upgradePanelTexture.context.lineWidth = 12;
+    upgradePanelTexture.context.fillRect(0, 0, 200, 400);
+    upgradePanelTexture.context.strokeRect(0, 0, 200, 400);
+    upgradePanelTexture.refresh();
+
+    // create panel button texture
+    const buttonTexture = this.textures.createCanvas('button', 176, 48);
+    buttonTexture.context.fillStyle = '#e6dec7';
+    buttonTexture.context.strokeStyle = '#35371c';
+    buttonTexture.context.lineWidth = 4;
+    buttonTexture.context.fillRect(0, 0, 225, 48);
+    buttonTexture.context.strokeRect(0, 0, 225, 48);
+    buttonTexture.refresh();
   }
 
   create() {
@@ -87,16 +110,20 @@ class MainScene extends Phaser.Scene {
       strokeThickness: 2,
     });
 
-    // create upgrades panel
-    const upgradePanelTexture = this.textures.createCanvas('upgradePanel', 200, 400); // origin is center
-    upgradePanelTexture.context.fillStyle = '#9a783d';
-    upgradePanelTexture.context.strokeStyle = '#35371c';
-    upgradePanelTexture.context.lineWidth = 12;
-    upgradePanelTexture.context.fillRect(0, 0, 250, 400);
-    upgradePanelTexture.context.strokeRect(0, 0, 250, 400);
-    upgradePanelTexture.refresh();
-
+    // draw upgrade panel
     this.add.image(110, 280, 'upgradePanel');
+
+    this.upgradeButtons = this.add.group();
+    const attackUpgradeButton = this.add
+      .image(110, 116, 'button')
+      .setInteractive()
+      .on('pointerdown', this.onClickUpgrade.bind(this));
+    this.add.image(42, 116, 'dagger');
+    this.playerDmgText = this.add.text(80, 104, 'Attack: ' + this.player.clickDmg, {
+      font: '24px Arial Black',
+      color: '#000',
+    });
+    this.upgradeButtons.add(attackUpgradeButton);
 
     // load the first monster into the game
     this.getRandomMonster();
@@ -274,6 +301,19 @@ class MainScene extends Phaser.Scene {
       this.playerGoldText.text = 'Gold: ' + this.player.gold;
     }
     coin.destroy();
+  }
+
+  onClickUpgrade() {
+    if (this.player.gold - 5 >= 0) {
+      this.player.gold -= 5;
+      if (this.playerGoldText) {
+        this.playerGoldText.text = 'Gold: ' + this.player.gold;
+      }
+      this.player.clickDmg++;
+      if (this.playerDmgText) {
+        this.playerDmgText.text = 'Attack: ' + this.player.clickDmg;
+      }
+    }
   }
 }
 
