@@ -9,8 +9,6 @@ class StartScene extends Phaser.Scene {
   }
 
   async preload() {
-    console.log('preloading StartScene');
-
     this.screenCenterX = this.cameras.main.worldView.x + this.cameras.main.width / 2;
     this.screenCenterY = this.cameras.main.worldView.y + this.cameras.main.height / 2;
 
@@ -21,8 +19,7 @@ class StartScene extends Phaser.Scene {
   }
 
   create() {
-    console.log('creating StartScene');
-
+    // background
     const bgGroup = this.add.group();
     const bg1 = bgGroup.create(this.screenCenterX, this.screenCenterY, 'forest-back');
     bgGroup.create(this.screenCenterX, this.screenCenterY, 'forest-lights');
@@ -34,8 +31,9 @@ class StartScene extends Phaser.Scene {
     const scale = Math.max(scaleX, scaleY);
     bgGroup.scaleXY(scale);
 
+    // title
     this.add
-      .text(this.screenCenterX, this.screenCenterY - 200, 'Growdle: An Idle Game', {
+      .text(this.screenCenterX, this.screenCenterY - 200, 'Growdle: A Clicker Game', {
         fontFamily: 'bebas',
         fontSize: '65px',
         color: '#fff',
@@ -43,6 +41,7 @@ class StartScene extends Phaser.Scene {
       .setOrigin(0.5)
       .setShadow(2, 2, '#333', 2, false, true);
 
+    // new game button
     const newGameButton = this.add
       .text(this.screenCenterX - 100, this.screenCenterY, 'New Game', {
         fontFamily: 'bebas',
@@ -57,6 +56,7 @@ class StartScene extends Phaser.Scene {
       .on('pointerover', () => newGameButton.setStyle({ backgroundColor: '#1c4425' }))
       .on('pointerout', () => newGameButton.setStyle({ backgroundColor: '#468233' }));
 
+    // load game button
     const loadGameButton = this.add
       .text(this.screenCenterX + 100, this.screenCenterY, 'Load Game', {
         fontFamily: 'bebas',
@@ -73,11 +73,11 @@ class StartScene extends Phaser.Scene {
   }
 
   startGame() {
-    console.log('starting new game');
+    this.scene.start('MainScene');
   }
 
   loadGame() {
-    console.log('loading saved game');
+    this.scene.start('MainScene');
   }
 }
 
