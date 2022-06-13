@@ -36,6 +36,9 @@ class MainScene extends Phaser.Scene {
   private screenCenterY: number;
 
   private player: Player;
+  private level: number;
+  private kills: number;
+  private killsRequired: number;
 
   private currentMonster: Phaser.GameObjects.Sprite | null;
 
@@ -48,6 +51,8 @@ class MainScene extends Phaser.Scene {
   private playerGoldText: Phaser.GameObjects.Text | null;
   private playerDmgText: Phaser.GameObjects.Text | null;
   private playerDpsText: Phaser.GameObjects.Text | null;
+  private worldLevelText: Phaser.GameObjects.Text | null;
+  private worldKillsText: Phaser.GameObjects.Text | null;
 
   private dpsTimer: Phaser.Time.TimerEvent | null;
 
@@ -97,20 +102,30 @@ class MainScene extends Phaser.Scene {
 
     this.screenCenterX = 0;
     this.screenCenterY = 0;
-    this.currentMonster = null;
-    this.currentMonsterNameText = null;
-    this.currentMonsterHealthText = null;
-    this.monsterPool = null;
-    this.coinPool = null;
-    this.dmgTextPool = null;
+
     this.player = {
       clickDmg: 1,
       gold: 0,
       dps: 0,
     };
+    this.level = 1;
+    this.kills = 0;
+    this.killsRequired = 10;
+
+    this.currentMonster = null;
+
+    this.monsterPool = null;
+    this.coinPool = null;
+    this.dmgTextPool = null;
+
+    this.currentMonsterNameText = null;
+    this.currentMonsterHealthText = null;
     this.playerGoldText = null;
     this.playerDmgText = null;
     this.playerDpsText = null;
+    this.worldLevelText = null;
+    this.worldKillsText = null;
+
     this.dpsTimer = null;
   }
 
@@ -150,6 +165,18 @@ class MainScene extends Phaser.Scene {
     this.createDmgTextPool();
 
     this.playerGoldText = this.add.text(30, 30, 'Gold: ' + this.player.gold, {
+      font: '24px Arial Black',
+      color: '#fff',
+      strokeThickness: 2,
+    });
+
+    this.worldLevelText = this.add.text(this.screenCenterX, 30, 'Level: ' + this.level, {
+      font: '24px Arial Black',
+      color: '#fff',
+      strokeThickness: 2,
+    });
+
+    this.worldKillsText = this.add.text(this.screenCenterX, 56, 'Kills: ' + this.kills + '/' + this.killsRequired, {
       font: '24px Arial Black',
       color: '#fff',
       strokeThickness: 2,
@@ -318,54 +345,36 @@ class MainScene extends Phaser.Scene {
     if (this.playerDpsText) {
       this.playerDpsText.text = 'Auto: ' + this.player.dps;
     }
+
+    if (this.worldLevelText) {
+      this.worldLevelText.text = 'Level: ' + this.level;
+    }
+
+    if (this.worldKillsText) {
+      this.worldKillsText.text = 'Kills: ' + this.kills + '/' + this.killsRequired;
+    }
   }
 
   onClickMonster() {
-    if (this.currentMonster) {
-      // eslint-disable-next-line
-      const updatedData = this.currentMonster?.data as any; // hacky way to handle unknown DataManager
-
-      // on click, player deals damage to the monster
-      updatedData.health = updatedData.health - this.player.clickDmg;
-      if (this.currentMonsterHealthText) {
-        this.currentMonsterHealthText.text = updatedData.health + ' HP';
-      }
-
-      const dmgText = this.dmgTextPool?.getFirst(false);
-      if (dmgText) {
-        dmgText.text = this.player.clickDmg;
-        dmgText.alpha = 1;
-        dmgText.active = true;
-        this.tweens.add({
-          targets: dmgText,
-          alpha: 0,
-          duration: 1000,
-          ease: 'Cubic.easeOut',
-          x: Phaser.Math.Between(100, 700),
-          y: 100,
-          onComplete: (_, targets: Phaser.GameObjects.Sprite[]) => {
-            targets[0].destroy();
-          },
-        });
-      }
-
-      // check if dead
-      if (updatedData.health <= 0) {
-        // add coin to world
-        const coin = this.coinPool?.getFirst(false);
-        coin.active = true;
-        coin.x = this.screenCenterX + Phaser.Math.Between(0, 200);
-        coin.y = this.screenCenterY + Phaser.Math.Between(-100, 100);
-
-        // set coin to auto click
-        this.time.delayedCall(3000, () => this.onClickCoin(coin));
-
-        // if died, load new monster
-        this.getRandomMonster();
-      } else {
-        this.currentMonster.data = updatedData;
-      }
+    const dmgText = this.dmgTextPool?.getFirst(false);
+    if (dmgText) {
+      dmgText.text = this.player.clickDmg;
+      dmgText.alpha = 1;
+      dmgText.active = true;
+      this.tweens.add({
+        targets: dmgText,
+        alpha: 0,
+        duration: 1000,
+        ease: 'Cubic.easeOut',
+        x: Phaser.Math.Between(100, 700),
+        y: 100,
+        onComplete: (_, targets: Phaser.GameObjects.Sprite[]) => {
+          targets[0].destroy();
+        },
+      });
     }
+
+    this.dealDamage(this.player.clickDmg);
   }
 
   onClickCoin(coin: Phaser.GameObjects.GameObject) {
@@ -390,34 +399,51 @@ class MainScene extends Phaser.Scene {
 
   onDPS() {
     if (this.player.dps > 0) {
-      if (this.currentMonster) {
-        // eslint-disable-next-line
-        const updatedData = this.currentMonster?.data as any; // hacky way to handle unknown DataManager
+      this.dealDamage(this.player.dps);
+    }
+  }
 
-        // on click, player deals damage to the monster
-        updatedData.health = updatedData.health - this.player.dps;
-        if (this.currentMonsterHealthText) {
-          this.currentMonsterHealthText.text = updatedData.health + ' HP';
-        }
+  dealDamage(damage: number) {
+    if (this.currentMonster) {
+      // eslint-disable-next-line
+      const updatedData = this.currentMonster?.data as any; // hacky way to handle unknown DataManager
 
-        // check if dead
-        if (updatedData.health <= 0) {
-          // add coin to world
-          const coin = this.coinPool?.getFirst(false);
-          coin.active = true;
-          coin.x = this.screenCenterX + Phaser.Math.Between(0, 200);
-          coin.y = this.screenCenterY + Phaser.Math.Between(-100, 100);
+      // on click, player deals damage to the monster
+      updatedData.health = updatedData.health - damage;
+      if (this.currentMonsterHealthText) {
+        this.currentMonsterHealthText.text = updatedData.health + ' HP';
+      }
 
-          // set coin to auto click
-          this.time.delayedCall(3000, () => this.onClickCoin(coin));
-
-          // if died, load new monster
-          this.getRandomMonster();
-        } else {
-          this.currentMonster.data = updatedData;
-        }
+      // check if dead
+      if (updatedData.health <= 0) {
+        this.onMonsterKilled();
+      } else {
+        this.currentMonster.data = updatedData;
       }
     }
+  }
+
+  onMonsterKilled() {
+    // increment world statistics
+    this.kills++;
+    if (this.kills >= this.killsRequired) {
+      this.level++;
+      this.kills = 0;
+      this.killsRequired += 10;
+    }
+    this.updateText();
+
+    // add coin to world
+    const coin = this.coinPool?.getFirst(false);
+    coin.active = true;
+    coin.x = this.screenCenterX + Phaser.Math.Between(0, 200);
+    coin.y = this.screenCenterY + Phaser.Math.Between(-100, 100);
+
+    // set coin to auto click
+    this.time.delayedCall(3000, () => this.onClickCoin(coin));
+
+    // if died, load new monster
+    this.getRandomMonster();
   }
 }
 
