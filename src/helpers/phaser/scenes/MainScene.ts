@@ -5,6 +5,8 @@ type Player = {
   clickDmg: number;
   /** the amount of gold earned */
   gold: number;
+  /** the amount of idle damage done over time */
+  dps: number;
 };
 
 type Monster = {
@@ -16,19 +18,38 @@ type Monster = {
   maxHealth: number;
 };
 
+type UpgradeButton = {
+  /** the icon used in the upgrade button */
+  icon: string;
+  /** the name of what is upgraded */
+  name: string;
+  /** the current level of the upgrade */
+  level: number;
+  /** the cost of the upgrade */
+  cost: number;
+  /** the logic for updating the stat of the player */
+  purchaseHandler: () => void;
+};
+
 class MainScene extends Phaser.Scene {
   private screenCenterX: number;
   private screenCenterY: number;
+
+  private player: Player;
+
   private currentMonster: Phaser.GameObjects.Sprite | null;
-  private currentMonsterNameText: Phaser.GameObjects.Text | null;
-  private currentMonsterHealthText: Phaser.GameObjects.Text | null;
+
   private monsterPool: Phaser.GameObjects.Group | null;
   private coinPool: Phaser.GameObjects.Group | null;
   private dmgTextPool: Phaser.GameObjects.Group | null;
-  private upgradeButtons: Phaser.GameObjects.Group | null;
-  private player: Player;
+
+  private currentMonsterNameText: Phaser.GameObjects.Text | null;
+  private currentMonsterHealthText: Phaser.GameObjects.Text | null;
   private playerGoldText: Phaser.GameObjects.Text | null;
   private playerDmgText: Phaser.GameObjects.Text | null;
+  private playerDpsText: Phaser.GameObjects.Text | null;
+
+  private dpsTimer: Phaser.Time.TimerEvent | null;
 
   // monster data based on sprites found in /public
   private monsterData: Monster[] = [
@@ -50,6 +71,27 @@ class MainScene extends Phaser.Scene {
     { name: 'Stygian Lizard', image: 'stygian_lizard', maxHealth: 20 },
   ];
 
+  private upgradeButtonData: UpgradeButton[] = [
+    {
+      icon: 'dagger',
+      name: 'Attack',
+      level: 1,
+      cost: 5,
+      purchaseHandler: () => {
+        this.player.clickDmg += 1;
+      },
+    },
+    {
+      icon: 'swordIcon1',
+      name: 'Auto',
+      level: 0,
+      cost: 10,
+      purchaseHandler: () => {
+        this.player.dps += 2;
+      },
+    },
+  ];
+
   constructor() {
     super('MainScene');
 
@@ -61,13 +103,15 @@ class MainScene extends Phaser.Scene {
     this.monsterPool = null;
     this.coinPool = null;
     this.dmgTextPool = null;
-    this.upgradeButtons = null;
     this.player = {
       clickDmg: 1,
       gold: 0,
+      dps: 0,
     };
     this.playerGoldText = null;
     this.playerDmgText = null;
+    this.playerDpsText = null;
+    this.dpsTimer = null;
   }
 
   preload() {
@@ -79,6 +123,7 @@ class MainScene extends Phaser.Scene {
     this.preloadMonsterSprites();
     this.load.image('gold_coin', '/assets/icons/I_GoldCoin.png');
     this.load.image('dagger', '/assets/icons/W_Dagger002.png');
+    this.load.image('swordIcon1', '/assets/icons/S_Sword01.png');
 
     // create upgrade panel texture
     const upgradePanelTexture = this.textures.createCanvas('upgradePanel', 200, 400); // origin is center
@@ -113,20 +158,38 @@ class MainScene extends Phaser.Scene {
     // draw upgrade panel
     this.add.image(110, 280, 'upgradePanel');
 
-    this.upgradeButtons = this.add.group();
-    const attackUpgradeButton = this.add
-      .image(110, 116, 'button')
-      .setInteractive()
-      .on('pointerdown', this.onClickUpgrade.bind(this));
-    this.add.image(42, 116, 'dagger');
-    this.playerDmgText = this.add.text(80, 104, 'Attack: ' + this.player.clickDmg, {
-      font: '24px Arial Black',
-      color: '#000',
+    this.upgradeButtonData.forEach((data, index) => {
+      this.add
+        .image(110, 116 + 54 * index, 'button')
+        .setInteractive()
+        .on('pointerdown', this.onClickUpgrade.bind(this, data));
+      this.add.image(42, 116 + 54 * index, data.icon);
+
+      switch (index) {
+        case 0:
+          this.playerDmgText = this.add.text(80, 104 + 54 * index, data.name + ': ' + this.player.clickDmg, {
+            font: '24px Arial Black',
+            color: '#000',
+          });
+          break;
+        case 1:
+          this.playerDpsText = this.add.text(80, 104 + 54 * index, data.name + ': ' + this.player.dps, {
+            font: '24px Arial Black',
+            color: '#000',
+          });
+          break;
+      }
     });
-    this.upgradeButtons.add(attackUpgradeButton);
 
     // load the first monster into the game
     this.getRandomMonster();
+
+    this.dpsTimer = this.time.addEvent({
+      delay: 1000,
+      callback: this.onDPS,
+      callbackScope: this,
+      loop: true,
+    });
   }
 
   // preloads sprites using monster data
@@ -243,6 +306,20 @@ class MainScene extends Phaser.Scene {
     );
   }
 
+  updateText() {
+    if (this.playerGoldText) {
+      this.playerGoldText.text = 'Gold: ' + this.player.gold;
+    }
+
+    if (this.playerDmgText) {
+      this.playerDmgText.text = 'Attack: ' + this.player.clickDmg;
+    }
+
+    if (this.playerDpsText) {
+      this.playerDpsText.text = 'Auto: ' + this.player.dps;
+    }
+  }
+
   onClickMonster() {
     if (this.currentMonster) {
       // eslint-disable-next-line
@@ -303,15 +380,42 @@ class MainScene extends Phaser.Scene {
     coin.destroy();
   }
 
-  onClickUpgrade() {
-    if (this.player.gold - 5 >= 0) {
-      this.player.gold -= 5;
-      if (this.playerGoldText) {
-        this.playerGoldText.text = 'Gold: ' + this.player.gold;
-      }
-      this.player.clickDmg++;
-      if (this.playerDmgText) {
-        this.playerDmgText.text = 'Attack: ' + this.player.clickDmg;
+  onClickUpgrade(data: UpgradeButton) {
+    if (this.player.gold - data.cost >= 0) {
+      this.player.gold -= data.cost;
+      data.purchaseHandler.call(this);
+      this.updateText();
+    }
+  }
+
+  onDPS() {
+    if (this.player.dps > 0) {
+      if (this.currentMonster) {
+        // eslint-disable-next-line
+        const updatedData = this.currentMonster?.data as any; // hacky way to handle unknown DataManager
+
+        // on click, player deals damage to the monster
+        updatedData.health = updatedData.health - this.player.dps;
+        if (this.currentMonsterHealthText) {
+          this.currentMonsterHealthText.text = updatedData.health + ' HP';
+        }
+
+        // check if dead
+        if (updatedData.health <= 0) {
+          // add coin to world
+          const coin = this.coinPool?.getFirst(false);
+          coin.active = true;
+          coin.x = this.screenCenterX + Phaser.Math.Between(0, 200);
+          coin.y = this.screenCenterY + Phaser.Math.Between(-100, 100);
+
+          // set coin to auto click
+          this.time.delayedCall(3000, () => this.onClickCoin(coin));
+
+          // if died, load new monster
+          this.getRandomMonster();
+        } else {
+          this.currentMonster.data = updatedData;
+        }
       }
     }
   }
