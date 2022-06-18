@@ -54,8 +54,6 @@ class MainScene extends Phaser.Scene {
   private worldLevelText: Phaser.GameObjects.Text | null;
   private worldKillsText: Phaser.GameObjects.Text | null;
 
-  private dpsTimer: Phaser.Time.TimerEvent | null;
-
   // monster data based on sprites found in /public
   private monsterData: Monster[] = [
     { name: 'Aerocephal', image: 'aerocephal', maxHealth: 10 },
@@ -125,8 +123,6 @@ class MainScene extends Phaser.Scene {
     this.playerDpsText = null;
     this.worldLevelText = null;
     this.worldKillsText = null;
-
-    this.dpsTimer = null;
   }
 
   preload() {
@@ -211,7 +207,7 @@ class MainScene extends Phaser.Scene {
     // load the first monster into the game
     this.getRandomMonster();
 
-    this.dpsTimer = this.time.addEvent({
+    this.time.addEvent({
       delay: 1000,
       callback: this.onDPS,
       callbackScope: this,
