@@ -131,7 +131,9 @@ class MainScene extends Phaser.Scene {
     this.screenCenterY = this.cameras.main.worldView.y + this.cameras.main.height / 2;
 
     // load game assets
-    this.preloadMonsterSprites();
+    this.monsterData.forEach((monster) => {
+      this.load.image(monster.image, `assets/sprites/${monster.image}.png`);
+    });
     this.load.image('gold_coin', '/assets/icons/I_GoldCoin.png');
     this.load.image('dagger', '/assets/icons/W_Dagger002.png');
     this.load.image('swordIcon1', '/assets/icons/S_Sword01.png');
@@ -156,29 +158,58 @@ class MainScene extends Phaser.Scene {
   }
 
   create() {
-    this.createMonsterPool();
-    this.createCoinPool();
-    this.createDmgTextPool();
+    // create coin sprites to show when monsters are defeated
+    this.coinPool = this.add.group();
+    this.coinPool.createMultiple({
+      key: 'gold_coin',
+      quantity: 50,
+      setXY: {
+        x: 2000,
+        y: 0,
+      },
+    });
+    this.coinPool.children.each((coin) => {
+      coin.active = false;
+      coin.setInteractive();
+      coin.on('pointerdown', this.onClickCoin.bind(this, coin));
+    });
 
+    // create damage text to show when monsters take damage
+    this.dmgTextPool = this.add.group();
+    let dmgText;
+    for (let i = 0; i < 50; i++) {
+      dmgText = this.add.text(0, 0, '1', {
+        font: '64px Arial Black',
+        color: '#fff',
+        strokeThickness: 2,
+      });
+      dmgText.alpha = 0;
+      dmgText.active = false;
+      this.dmgTextPool?.add(dmgText);
+    }
+
+    // create text showing amount of gold the player has
     this.playerGoldText = this.add.text(30, 30, 'Gold: ' + this.player.gold, {
       font: '24px Arial Black',
       color: '#fff',
       strokeThickness: 2,
     });
 
+    // create world information text
     this.worldLevelText = this.add.text(this.screenCenterX, 30, 'Level: ' + this.level, {
       font: '24px Arial Black',
       color: '#fff',
       strokeThickness: 2,
     });
 
+    // create kill counter text
     this.worldKillsText = this.add.text(this.screenCenterX, 56, 'Kills: ' + this.kills + '/' + this.killsRequired, {
       font: '24px Arial Black',
       color: '#fff',
       strokeThickness: 2,
     });
 
-    // draw upgrade panel
+    // create the upgrade panel
     this.add.image(110, 280, 'upgradePanel');
 
     this.upgradeButtonData.forEach((data, index) => {
@@ -204,25 +235,15 @@ class MainScene extends Phaser.Scene {
       }
     });
 
-    // load the first monster into the game
-    this.getRandomMonster();
-
+    // create timer to deal auto damage every second
     this.time.addEvent({
       delay: 1000,
       callback: this.onDPS,
       callbackScope: this,
       loop: true,
     });
-  }
 
-  // preloads sprites using monster data
-  preloadMonsterSprites() {
-    this.monsterData.forEach((monster) => {
-      this.load.image(monster.image, `assets/sprites/${monster.image}.png`);
-    });
-  }
-
-  createMonsterPool() {
+    // creates all monster sprites off scren
     this.monsterPool = this.add.group();
     this.monsterData.forEach((data) => {
       // create sprite for each, off screen
@@ -248,38 +269,9 @@ class MainScene extends Phaser.Scene {
       monster.setInteractive();
       monster.on('pointerdown', this.onClickMonster.bind(this));
     });
-  }
 
-  createCoinPool() {
-    this.coinPool = this.add.group();
-    this.coinPool.createMultiple({
-      key: 'gold_coin',
-      quantity: 50,
-      setXY: {
-        x: 2000,
-        y: 0,
-      },
-    });
-    this.coinPool.children.each((coin) => {
-      coin.active = false;
-      coin.setInteractive();
-      coin.on('pointerdown', this.onClickCoin.bind(this, coin));
-    });
-  }
-
-  createDmgTextPool() {
-    this.dmgTextPool = this.add.group();
-    let dmgText;
-    for (let i = 0; i < 50; i++) {
-      dmgText = this.add.text(0, 0, '1', {
-        font: '64px Arial Black',
-        color: '#fff',
-        strokeThickness: 2,
-      });
-      dmgText.alpha = 0;
-      dmgText.active = false;
-      this.dmgTextPool?.add(dmgText);
-    }
+    // load the first monster into the game
+    this.getRandomMonster();
   }
 
   getRandomMonster() {
@@ -351,6 +343,26 @@ class MainScene extends Phaser.Scene {
     }
   }
 
+  dealDamage(damage: number) {
+    if (this.currentMonster) {
+      // eslint-disable-next-line
+      const updatedData = this.currentMonster?.data as any; // hacky way to handle unknown DataManager
+
+      // on click, player deals damage to the monster
+      updatedData.health = updatedData.health - damage;
+      if (this.currentMonsterHealthText) {
+        this.currentMonsterHealthText.text = updatedData.health + ' HP';
+      }
+
+      // check if dead
+      if (updatedData.health <= 0) {
+        this.onMonsterKilled();
+      } else {
+        this.currentMonster.data = updatedData;
+      }
+    }
+  }
+
   onClickMonster() {
     const dmgText = this.dmgTextPool?.getFirst(false);
     if (dmgText) {
@@ -396,26 +408,6 @@ class MainScene extends Phaser.Scene {
   onDPS() {
     if (this.player.dps > 0) {
       this.dealDamage(this.player.dps);
-    }
-  }
-
-  dealDamage(damage: number) {
-    if (this.currentMonster) {
-      // eslint-disable-next-line
-      const updatedData = this.currentMonster?.data as any; // hacky way to handle unknown DataManager
-
-      // on click, player deals damage to the monster
-      updatedData.health = updatedData.health - damage;
-      if (this.currentMonsterHealthText) {
-        this.currentMonsterHealthText.text = updatedData.health + ' HP';
-      }
-
-      // check if dead
-      if (updatedData.health <= 0) {
-        this.onMonsterKilled();
-      } else {
-        this.currentMonster.data = updatedData;
-      }
     }
   }
 
