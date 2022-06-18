@@ -35,7 +35,7 @@ class StartScene extends Phaser.Scene {
     this.add
       .text(this.screenCenterX, this.screenCenterY - 200, 'Growdle: A Clicker Game', {
         fontFamily: 'bebas',
-        fontSize: '65px',
+        fontSize: '36px',
         color: '#fff',
       })
       .setOrigin(0.5)
