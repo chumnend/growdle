@@ -256,6 +256,34 @@ class MainScene extends Phaser.Scene {
       Phaser.Math.Between(0, this.monsterData.length - 1)
     ] as Phaser.GameObjects.Sprite;
 
+    // revives the monster if dead
+    this.reviveMonster();
+
+    // move new monster to center of the screen
+    this.currentMonster.setPosition(this.screenCenterX + this.currentMonster.width / 2 + 100, this.screenCenterY);
+
+    // update monster information
+    this.updateText();
+  }
+
+  dealDamage(damage: number) {
+    // eslint-disable-next-line
+    const data = this.currentMonster.data as any; // hacky way to handle unknown DataManager
+
+    // on click, player deals damage to the monster
+    data.health = data.health - damage;
+    this.currentMonster.data = data;
+
+    // update monster information
+    this.updateText();
+
+    // check if dead
+    if (data.health <= 0) {
+      this.onMonsterKilled();
+    }
+  }
+
+  reviveMonster() {
     // get monster data from sprite
     // eslint-disable-next-line
     const data = this.currentMonster.data as any;
@@ -263,12 +291,6 @@ class MainScene extends Phaser.Scene {
     // revives the monster if dead
     data.health = data.maxHealth;
     this.currentMonster.data = data;
-
-    // move new monster to center of the screen
-    this.currentMonster.setPosition(this.screenCenterX + this.currentMonster.width / 2 + 100, this.screenCenterY);
-
-    // update monster information
-    this.updateText();
   }
 
   updateText() {
@@ -283,26 +305,6 @@ class MainScene extends Phaser.Scene {
     this.playerDpsText.text = 'Auto: ' + this.player.dpsDmg;
     this.worldLevelText.text = 'Level: ' + this.world.level;
     this.worldKillsText.text = 'Kills: ' + this.world.currentKills + '/' + this.world.requiredKills;
-  }
-
-  dealDamage(damage: number) {
-    if (this.currentMonster) {
-      // eslint-disable-next-line
-      const updatedData = this.currentMonster?.data as any; // hacky way to handle unknown DataManager
-
-      // on click, player deals damage to the monster
-      updatedData.health = updatedData.health - damage;
-      if (this.currentMonsterHealthText) {
-        this.currentMonsterHealthText.text = updatedData.health + ' HP';
-      }
-
-      // check if dead
-      if (updatedData.health <= 0) {
-        this.onMonsterKilled();
-      } else {
-        this.currentMonster.data = updatedData;
-      }
-    }
   }
 
   onClickMonster() {
