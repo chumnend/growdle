@@ -1,44 +1,13 @@
 import Phaser from 'phaser';
 
-type Player = {
-  /** the amount of gold earned */
-  gold: number;
-  /** the amount of damage the player character does */
-  clickDmg: number;
-  /** the amount of idle damage done over time */
-  dpsDmg: number;
-};
-
-type Monster = {
-  /** the name of the monster */
-  name: string;
-  /** the name of the sprite for the monster */
-  image: string;
-  /** the maximum health of the monster */
-  maxHealth: number;
-};
-
-type UpgradeButton = {
-  /** the icon used in the upgrade button */
-  icon: string;
-  /** the name of what is upgraded */
-  name: string;
-  /** the current level of the upgrade */
-  level: number;
-  /** the cost of the upgrade */
-  cost: number;
-  /** the logic for updating the stat of the player */
-  purchaseHandler: () => void;
-};
+import { Player, World, Monster, Upgrade } from '../types';
 
 class MainScene extends Phaser.Scene {
   private screenCenterX: number;
   private screenCenterY: number;
 
   private player: Player;
-  private level: number;
-  private kills: number;
-  private killsRequired: number;
+  private world: World;
 
   private monsterPool!: Phaser.GameObjects.Group;
   private coinPool!: Phaser.GameObjects.Group;
@@ -54,7 +23,7 @@ class MainScene extends Phaser.Scene {
   private worldLevelText!: Phaser.GameObjects.Text;
   private worldKillsText!: Phaser.GameObjects.Text;
 
-  // monster data based on sprites found in /public
+  // monster data based on sprites found in /public, for configuring monster sprites
   private monsterData: Monster[] = [
     { name: 'Aerocephal', image: 'aerocephal', maxHealth: 10 },
     { name: 'Arcana Drake', image: 'arcana_drake', maxHealth: 20 },
@@ -74,7 +43,8 @@ class MainScene extends Phaser.Scene {
     { name: 'Stygian Lizard', image: 'stygian_lizard', maxHealth: 20 },
   ];
 
-  private upgradeButtonData: UpgradeButton[] = [
+  // upgrade data for configuring button in upgrade panel
+  private upgradeButtonData: Upgrade[] = [
     {
       icon: 'dagger',
       name: 'Attack',
@@ -106,9 +76,12 @@ class MainScene extends Phaser.Scene {
       gold: 0,
       dpsDmg: 0,
     };
-    this.level = 1;
-    this.kills = 0;
-    this.killsRequired = 10;
+
+    this.world = {
+      level: 1,
+      currentKills: 0,
+      requiredKills: 10,
+    };
   }
 
   preload() {
@@ -195,18 +168,23 @@ class MainScene extends Phaser.Scene {
     });
 
     // create world information text
-    this.worldLevelText = this.add.text(this.screenCenterX, 30, 'Level: ' + this.level, {
+    this.worldLevelText = this.add.text(this.screenCenterX, 30, 'Level: ' + this.world.level, {
       font: '24px Arial Black',
       color: '#fff',
       strokeThickness: 2,
     });
 
     // create kill counter text
-    this.worldKillsText = this.add.text(this.screenCenterX, 56, 'Kills: ' + this.kills + '/' + this.killsRequired, {
-      font: '24px Arial Black',
-      color: '#fff',
-      strokeThickness: 2,
-    });
+    this.worldKillsText = this.add.text(
+      this.screenCenterX,
+      56,
+      'Kills: ' + this.world.currentKills + '/' + this.world.requiredKills,
+      {
+        font: '24px Arial Black',
+        color: '#fff',
+        strokeThickness: 2,
+      },
+    );
 
     // create the upgrade panel
     this.add.image(110, 280, 'upgradePanel');
@@ -303,8 +281,8 @@ class MainScene extends Phaser.Scene {
     this.playerGoldText.text = 'Gold: ' + this.player.gold;
     this.playerDmgText.text = 'Attack: ' + this.player.clickDmg;
     this.playerDpsText.text = 'Auto: ' + this.player.dpsDmg;
-    this.worldLevelText.text = 'Level: ' + this.level;
-    this.worldKillsText.text = 'Kills: ' + this.kills + '/' + this.killsRequired;
+    this.worldLevelText.text = 'Level: ' + this.world.level;
+    this.worldKillsText.text = 'Kills: ' + this.world.currentKills + '/' + this.world.requiredKills;
   }
 
   dealDamage(damage: number) {
@@ -361,7 +339,7 @@ class MainScene extends Phaser.Scene {
     coin.destroy();
   }
 
-  onClickUpgrade(data: UpgradeButton) {
+  onClickUpgrade(data: Upgrade) {
     if (this.player.gold - data.cost >= 0) {
       this.player.gold -= data.cost;
       data.purchaseHandler.call(this);
@@ -377,11 +355,11 @@ class MainScene extends Phaser.Scene {
 
   onMonsterKilled() {
     // increment world statistics
-    this.kills++;
-    if (this.kills >= this.killsRequired) {
-      this.level++;
-      this.kills = 0;
-      this.killsRequired += 10;
+    this.world.currentKills++;
+    if (this.world.currentKills >= this.world.requiredKills) {
+      this.world.level++;
+      this.world.currentKills = 0;
+      this.world.requiredKills += 10;
     }
     this.updateText();
 
