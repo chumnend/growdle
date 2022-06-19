@@ -1,12 +1,12 @@
 import Phaser from 'phaser';
 
 type Player = {
-  /** the amount of damage the player character does */
-  clickDmg: number;
   /** the amount of gold earned */
   gold: number;
+  /** the amount of damage the player character does */
+  clickDmg: number;
   /** the amount of idle damage done over time */
-  dps: number;
+  dpsDmg: number;
 };
 
 type Monster = {
@@ -40,19 +40,19 @@ class MainScene extends Phaser.Scene {
   private kills: number;
   private killsRequired: number;
 
-  private currentMonster: Phaser.GameObjects.Sprite | null;
+  private monsterPool!: Phaser.GameObjects.Group;
+  private coinPool!: Phaser.GameObjects.Group;
+  private dmgTextPool!: Phaser.GameObjects.Group;
 
-  private monsterPool: Phaser.GameObjects.Group | null;
-  private coinPool: Phaser.GameObjects.Group | null;
-  private dmgTextPool: Phaser.GameObjects.Group | null;
+  private currentMonster!: Phaser.GameObjects.Sprite;
+  private currentMonsterNameText!: Phaser.GameObjects.Text;
+  private currentMonsterHealthText!: Phaser.GameObjects.Text;
 
-  private currentMonsterNameText: Phaser.GameObjects.Text | null;
-  private currentMonsterHealthText: Phaser.GameObjects.Text | null;
-  private playerGoldText: Phaser.GameObjects.Text | null;
-  private playerDmgText: Phaser.GameObjects.Text | null;
-  private playerDpsText: Phaser.GameObjects.Text | null;
-  private worldLevelText: Phaser.GameObjects.Text | null;
-  private worldKillsText: Phaser.GameObjects.Text | null;
+  private playerGoldText!: Phaser.GameObjects.Text;
+  private playerDmgText!: Phaser.GameObjects.Text;
+  private playerDpsText!: Phaser.GameObjects.Text;
+  private worldLevelText!: Phaser.GameObjects.Text;
+  private worldKillsText!: Phaser.GameObjects.Text;
 
   // monster data based on sprites found in /public
   private monsterData: Monster[] = [
@@ -90,7 +90,7 @@ class MainScene extends Phaser.Scene {
       level: 0,
       cost: 10,
       purchaseHandler: () => {
-        this.player.dps += 2;
+        this.player.dpsDmg += 2;
       },
     },
   ];
@@ -104,25 +104,11 @@ class MainScene extends Phaser.Scene {
     this.player = {
       clickDmg: 1,
       gold: 0,
-      dps: 0,
+      dpsDmg: 0,
     };
     this.level = 1;
     this.kills = 0;
     this.killsRequired = 10;
-
-    this.currentMonster = null;
-
-    this.monsterPool = null;
-    this.coinPool = null;
-    this.dmgTextPool = null;
-
-    this.currentMonsterNameText = null;
-    this.currentMonsterHealthText = null;
-    this.playerGoldText = null;
-    this.playerDmgText = null;
-    this.playerDpsText = null;
-    this.worldLevelText = null;
-    this.worldKillsText = null;
   }
 
   preload() {
@@ -174,6 +160,19 @@ class MainScene extends Phaser.Scene {
       coin.on('pointerdown', this.onClickCoin.bind(this, coin));
     });
 
+    // create monster information text
+    this.currentMonsterNameText = this.add.text(this.screenCenterX - 100, this.screenCenterY - 40, '', {
+      font: '24px Arial Black',
+      color: '#fff',
+      strokeThickness: 2,
+    });
+
+    this.currentMonsterHealthText = this.add.text(this.screenCenterX - 100, this.screenCenterY + 40, '', {
+      font: '16px Arial Black',
+      color: '#ff0000',
+      strokeThickness: 2,
+    });
+
     // create damage text to show when monsters take damage
     this.dmgTextPool = this.add.group();
     let dmgText;
@@ -185,7 +184,7 @@ class MainScene extends Phaser.Scene {
       });
       dmgText.alpha = 0;
       dmgText.active = false;
-      this.dmgTextPool?.add(dmgText);
+      this.dmgTextPool.add(dmgText);
     }
 
     // create text showing amount of gold the player has
@@ -227,7 +226,7 @@ class MainScene extends Phaser.Scene {
           });
           break;
         case 1:
-          this.playerDpsText = this.add.text(80, 104 + 54 * index, data.name + ': ' + this.player.dps, {
+          this.playerDpsText = this.add.text(80, 104 + 54 * index, data.name + ': ' + this.player.dpsDmg, {
             font: '24px Arial Black',
             color: '#000',
           });
@@ -247,7 +246,7 @@ class MainScene extends Phaser.Scene {
     this.monsterPool = this.add.group();
     this.monsterData.forEach((data) => {
       // create sprite for each, off screen
-      const monster = this.monsterPool?.create(2000, this.screenCenterY, data.image);
+      const monster = this.monsterPool.create(2000, this.screenCenterY, data.image);
 
       // each sprite is saved as set of 4, we need to only load 1
       monster.frame.width = monster.frame.width / 4;
@@ -275,13 +274,7 @@ class MainScene extends Phaser.Scene {
   }
 
   getRandomMonster() {
-    if (this.currentMonster) {
-      // reset current monster
-      this.currentMonster.setPosition(2000, this.screenCenterY);
-    }
-
-    // pick new monster
-    this.currentMonster = this.monsterPool?.getChildren()[
+    this.currentMonster = this.monsterPool.getChildren()[
       Phaser.Math.Between(0, this.monsterData.length - 1)
     ] as Phaser.GameObjects.Sprite;
 
@@ -295,52 +288,23 @@ class MainScene extends Phaser.Scene {
 
     // move new monster to center of the screen
     this.currentMonster.setPosition(this.screenCenterX + this.currentMonster.width / 2 + 100, this.screenCenterY);
-    this.currentMonsterNameText?.destroy();
 
     // update monster information
-    this.currentMonsterNameText = this.add.text(
-      this.screenCenterX - 100,
-      this.screenCenterY - 40,
-      this.currentMonster.name,
-      {
-        font: '24px Arial Black',
-        color: '#fff',
-        strokeThickness: 2,
-      },
-    );
-    this.currentMonsterHealthText?.destroy();
-    this.currentMonsterHealthText = this.add.text(
-      this.screenCenterX - 100,
-      this.screenCenterY + 40,
-      data.health + ' HP',
-      {
-        font: '16px Arial Black',
-        color: '#ff0000',
-        strokeThickness: 2,
-      },
-    );
+    this.updateText();
   }
 
   updateText() {
-    if (this.playerGoldText) {
-      this.playerGoldText.text = 'Gold: ' + this.player.gold;
-    }
+    // get monster data from sprite
+    // eslint-disable-next-line
+    const data = this.currentMonster.data as any;
 
-    if (this.playerDmgText) {
-      this.playerDmgText.text = 'Attack: ' + this.player.clickDmg;
-    }
-
-    if (this.playerDpsText) {
-      this.playerDpsText.text = 'Auto: ' + this.player.dps;
-    }
-
-    if (this.worldLevelText) {
-      this.worldLevelText.text = 'Level: ' + this.level;
-    }
-
-    if (this.worldKillsText) {
-      this.worldKillsText.text = 'Kills: ' + this.kills + '/' + this.killsRequired;
-    }
+    this.currentMonsterNameText.text = this.currentMonster.name;
+    this.currentMonsterHealthText.text = data.health + ' HP';
+    this.playerGoldText.text = 'Gold: ' + this.player.gold;
+    this.playerDmgText.text = 'Attack: ' + this.player.clickDmg;
+    this.playerDpsText.text = 'Auto: ' + this.player.dpsDmg;
+    this.worldLevelText.text = 'Level: ' + this.level;
+    this.worldKillsText.text = 'Kills: ' + this.kills + '/' + this.killsRequired;
   }
 
   dealDamage(damage: number) {
@@ -364,7 +328,7 @@ class MainScene extends Phaser.Scene {
   }
 
   onClickMonster() {
-    const dmgText = this.dmgTextPool?.getFirst(false);
+    const dmgText = this.dmgTextPool.getFirst(false);
     if (dmgText) {
       dmgText.text = this.player.clickDmg;
       dmgText.alpha = 1;
@@ -406,8 +370,8 @@ class MainScene extends Phaser.Scene {
   }
 
   onDPS() {
-    if (this.player.dps > 0) {
-      this.dealDamage(this.player.dps);
+    if (this.player.dpsDmg > 0) {
+      this.dealDamage(this.player.dpsDmg);
     }
   }
 
@@ -422,7 +386,7 @@ class MainScene extends Phaser.Scene {
     this.updateText();
 
     // add coin to world
-    const coin = this.coinPool?.getFirst(false);
+    const coin = this.coinPool.getFirst(false);
     coin.active = true;
     coin.x = this.screenCenterX + Phaser.Math.Between(0, 200);
     coin.y = this.screenCenterY + Phaser.Math.Between(-100, 100);
@@ -430,7 +394,10 @@ class MainScene extends Phaser.Scene {
     // set coin to auto click
     this.time.delayedCall(3000, () => this.onClickCoin(coin));
 
-    // if died, load new monster
+    // move old monster off screen
+    this.currentMonster.setPosition(2000, this.screenCenterY);
+
+    // get a new monster
     this.getRandomMonster();
   }
 }
