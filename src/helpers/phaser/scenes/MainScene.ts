@@ -134,14 +134,14 @@ class MainScene extends Phaser.Scene {
     });
 
     // create monster information text
-    this.currentMonsterNameText = this.add.text(this.screenCenterX - 100, this.screenCenterY - 40, '', {
+    this.currentMonsterNameText = this.add.text(this.screenCenterX, this.screenCenterY + 140, '', {
       font: '24px Arial Black',
       color: '#fff',
       strokeThickness: 2,
     });
 
-    this.currentMonsterHealthText = this.add.text(this.screenCenterX - 100, this.screenCenterY + 40, '', {
-      font: '16px Arial Black',
+    this.currentMonsterHealthText = this.add.text(this.screenCenterX, this.screenCenterY + 180, '', {
+      font: '24px Arial Black',
       color: '#ff0000',
       strokeThickness: 2,
     });
@@ -268,7 +268,7 @@ class MainScene extends Phaser.Scene {
     this.reviveMonster();
 
     // move new monster to center of the screen
-    this.currentMonster.setPosition(this.screenCenterX + this.currentMonster.width / 2 + 100, this.screenCenterY);
+    this.currentMonster.setPosition(this.screenCenterX + this.currentMonster.width / 2 + 50, this.screenCenterY - 50);
 
     // update monster information
     this.updateText();
