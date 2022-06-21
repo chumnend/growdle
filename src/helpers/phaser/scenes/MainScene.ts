@@ -46,7 +46,7 @@ class MainScene extends Phaser.Scene {
   // upgrade data for configuring button in upgrade panel
   private upgradeButtonData: Upgrade[] = [
     {
-      icon: 'dagger',
+      icon: 'sword',
       name: 'Attack',
       level: 1,
       cost: 5,
@@ -55,7 +55,7 @@ class MainScene extends Phaser.Scene {
       },
     },
     {
-      icon: 'swordIcon1',
+      icon: 'magic',
       name: 'Auto',
       level: 0,
       cost: 10,
@@ -94,8 +94,8 @@ class MainScene extends Phaser.Scene {
       this.load.image(monster.image, `assets/sprites/${monster.image}.png`);
     });
     this.load.image('gold_coin', '/assets/icons/I_GoldCoin.png');
-    this.load.image('dagger', '/assets/icons/W_Dagger002.png');
-    this.load.image('swordIcon1', '/assets/icons/S_Sword01.png');
+    this.load.image('sword', '/assets/icons/S_Sword15.png');
+    this.load.image('magic', '/assets/icons/S_Magic11.png');
 
     // create upgrade panel texture
     const upgradePanelTexture = this.textures.createCanvas('upgradePanel', 200, 400); // origin is center
