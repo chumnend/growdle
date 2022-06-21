@@ -198,14 +198,22 @@ class MainScene extends Phaser.Scene {
 
       switch (index) {
         case 0:
-          this.playerDmgText = this.add.text(80, 104 + 54 * index, data.name + ': ' + this.player.clickDmg, {
-            font: '24px Arial Black',
+          this.playerDmgText = this.add.text(80, 100 + 54 * index, data.name + ': ' + this.player.clickDmg, {
+            font: '16px Arial Black',
+            color: '#000',
+          });
+          this.add.text(80, 116 + 54 * index, 'Cost: ' + data.cost, {
+            font: '16px Arial Black',
             color: '#000',
           });
           break;
         case 1:
-          this.playerDpsText = this.add.text(80, 104 + 54 * index, data.name + ': ' + this.player.dpsDmg, {
-            font: '24px Arial Black',
+          this.playerDpsText = this.add.text(80, 100 + 54 * index, data.name + ': ' + this.player.dpsDmg, {
+            font: '16px Arial Black',
+            color: '#000',
+          });
+          this.add.text(80, 116 + 54 * index, 'Cost: ' + data.cost, {
+            font: '16px Arial Black',
             color: '#000',
           });
           break;
@@ -310,9 +318,11 @@ class MainScene extends Phaser.Scene {
   onClickMonster() {
     const dmgText = this.dmgTextPool.getFirst(false);
     if (dmgText) {
-      dmgText.text = this.player.clickDmg;
-      dmgText.alpha = 1;
       dmgText.active = true;
+      dmgText.text = this.player.clickDmg;
+      dmgText.x = 0;
+      dmgText.y = 0;
+      dmgText.alpha = 1;
       this.tweens.add({
         targets: dmgText,
         alpha: 0,
@@ -323,9 +333,6 @@ class MainScene extends Phaser.Scene {
         onComplete: (_, targets: Phaser.GameObjects.Sprite[]) => {
           // reset the damage text
           targets[0].active = false;
-          targets[0].x = 0;
-          targets[0].y = 0;
-          targets[0].alpha = 1;
         },
       });
     }
