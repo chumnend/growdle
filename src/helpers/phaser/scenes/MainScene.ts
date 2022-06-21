@@ -321,7 +321,11 @@ class MainScene extends Phaser.Scene {
         x: Phaser.Math.Between(100, 700),
         y: 100,
         onComplete: (_, targets: Phaser.GameObjects.Sprite[]) => {
-          targets[0].destroy();
+          // reset the damage text
+          targets[0].active = false;
+          targets[0].x = 0;
+          targets[0].y = 0;
+          targets[0].alpha = 1;
         },
       });
     }
