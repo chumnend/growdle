@@ -37,3 +37,10 @@ export type Upgrade = {
   /** the logic for updating the stat of the player */
   purchaseHandler: () => void;
 };
+
+export type SaveData = {
+  /** Data about the player */
+  player: Player;
+  /** Data about the world */
+  world: World;
+};

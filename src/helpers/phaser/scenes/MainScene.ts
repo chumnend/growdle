@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 
-import { Player, World, Monster, Upgrade } from '../types';
-import { save } from '../../storage';
+import { Player, World, Monster, Upgrade, SaveData } from '../types';
+import { save } from '../storage';
 
 class MainScene extends Phaser.Scene {
   private screenCenterX: number;
@@ -87,11 +87,6 @@ class MainScene extends Phaser.Scene {
     };
   }
 
-  // eslint-disable-next-line
-  init(data: any) {
-    console.log(data);
-  }
-
   preload() {
     // get the center of the screen
     this.screenCenterX = this.cameras.main.worldView.x + this.cameras.main.width / 2;
@@ -125,7 +120,12 @@ class MainScene extends Phaser.Scene {
     buttonTexture.refresh();
   }
 
-  create() {
+  create(data: SaveData) {
+    if (Object.keys(data).length > 0) {
+      this.player = data.player;
+      this.world = data.world;
+    }
+
     // create coin sprites to show when monsters are defeated
     this.coinPool = this.add.group();
     this.coinPool.createMultiple({
@@ -263,8 +263,8 @@ class MainScene extends Phaser.Scene {
       // add data to sprite
       monster.data = {
         name: data.name,
-        maxHealth: data.maxHealth,
-        health: data.maxHealth,
+        maxHealth: this.strengthenMonster(data.maxHealth),
+        health: this.strengthenMonster(data.maxHealth),
       };
 
       // move anchor to center of image
@@ -320,6 +320,10 @@ class MainScene extends Phaser.Scene {
     return Math.ceil(cost + (this.world.level - 1) * 5);
   }
 
+  strengthenMonster(maxHealth: number): number {
+    return Math.ceil(maxHealth + (this.world.level - 1) * 10.6);
+  }
+
   nextLevel() {
     // modify world values
     this.world.level++;
@@ -330,7 +334,7 @@ class MainScene extends Phaser.Scene {
     this.monsterPool.getChildren().forEach((child) => {
       // eslint-disable-next-line
       const data = child.data as any; // hacky way to handle unknown DataManager
-      data.maxHealth = Math.ceil(data.maxHealth + (this.world.level - 1) * 10.6);
+      data.maxHealth = this.strengthenMonster(data.maxHealth);
       child.data = data;
     });
 

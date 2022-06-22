@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 
-import { load } from '../../storage';
+import { load } from '../storage';
 
 class StartScene extends Phaser.Scene {
   private screenCenterX = 0;
@@ -79,9 +79,8 @@ class StartScene extends Phaser.Scene {
   }
 
   loadGame() {
-    load();
-
-    this.scene.start('MainScene', { data: 'test' });
+    const data = load();
+    this.scene.start('MainScene', data);
   }
 }
 
