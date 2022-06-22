@@ -1,5 +1,11 @@
 # growdle
 
+## 0.4.0
+
+### Minor Changes
+
+- d737f35: added additional features and refactored code
+
 ## 0.3.0
 
 ### Minor Changes
