@@ -1,5 +1,7 @@
 import Phaser from 'phaser';
 
+import { load } from '../../storage';
+
 class StartScene extends Phaser.Scene {
   private screenCenterX = 0;
   private screenCenterY = 0;
@@ -52,7 +54,7 @@ class StartScene extends Phaser.Scene {
       .setStyle({ backgroundColor: '#468233' })
       .setInteractive({ useHandCursor: true })
       .setOrigin(0.5)
-      .on('pointerdown', () => this.startGame())
+      .on('pointerdown', () => this.newGame())
       .on('pointerover', () => newGameButton.setStyle({ backgroundColor: '#1c4425' }))
       .on('pointerout', () => newGameButton.setStyle({ backgroundColor: '#468233' }));
 
@@ -72,12 +74,14 @@ class StartScene extends Phaser.Scene {
       .on('pointerout', () => loadGameButton.setStyle({ backgroundColor: '#468233' }));
   }
 
-  startGame() {
+  newGame() {
     this.scene.start('MainScene');
   }
 
   loadGame() {
-    this.scene.start('MainScene');
+    load();
+
+    this.scene.start('MainScene', { data: 'test' });
   }
 }
 

@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 
 import { Player, World, Monster, Upgrade } from '../types';
+import { save } from '../../storage';
 
 class MainScene extends Phaser.Scene {
   private screenCenterX: number;
@@ -86,6 +87,11 @@ class MainScene extends Phaser.Scene {
     };
   }
 
+  // eslint-disable-next-line
+  init(data: any) {
+    console.log(data);
+  }
+
   preload() {
     // get the center of the screen
     this.screenCenterX = this.cameras.main.worldView.x + this.cameras.main.width / 2;
@@ -98,6 +104,7 @@ class MainScene extends Phaser.Scene {
     this.load.image('gold_coin', '/assets/icons/I_GoldCoin.png');
     this.load.image('sword', '/assets/icons/S_Sword15.png');
     this.load.image('magic', '/assets/icons/S_Magic11.png');
+    this.load.image('book', '/assets/icons/W_Book05.png');
 
     // create upgrade panel texture
     const upgradePanelTexture = this.textures.createCanvas('upgradePanel', 200, 400); // origin is center
@@ -223,6 +230,14 @@ class MainScene extends Phaser.Scene {
           this.upgradeText.push(text);
           break;
       }
+    });
+
+    // create save button
+    this.add.image(110, 550, 'button').setInteractive().on('pointerdown', save);
+    this.add.image(42, 550, 'book');
+    this.add.text(80, 542, 'Save', {
+      font: '16px Arial Black',
+      color: '#000',
     });
 
     // create timer to deal auto damage every second
