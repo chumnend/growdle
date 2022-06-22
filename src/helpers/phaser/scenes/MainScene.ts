@@ -17,6 +17,8 @@ class MainScene extends Phaser.Scene {
   private currentMonsterNameText!: Phaser.GameObjects.Text;
   private currentMonsterHealthText!: Phaser.GameObjects.Text;
 
+  private upgradeText!: Phaser.GameObjects.Text[];
+
   private playerGoldText!: Phaser.GameObjects.Text;
   private playerDmgText!: Phaser.GameObjects.Text;
   private playerDpsText!: Phaser.GameObjects.Text;
@@ -188,7 +190,8 @@ class MainScene extends Phaser.Scene {
 
     // create the upgrade panel
     this.add.image(110, 280, 'upgradePanel');
-
+    this.upgradeText = [];
+    let text;
     this.upgradeButtonData.forEach((data, index) => {
       this.add
         .image(110, 116 + 54 * index, 'button')
@@ -202,20 +205,22 @@ class MainScene extends Phaser.Scene {
             font: '16px Arial Black',
             color: '#000',
           });
-          this.add.text(80, 116 + 54 * index, 'Cost: ' + data.cost, {
+          text = this.add.text(80, 116 + 54 * index, 'Cost: ' + data.cost, {
             font: '16px Arial Black',
             color: '#000',
           });
+          this.upgradeText.push(text);
           break;
         case 1:
           this.playerDpsText = this.add.text(80, 100 + 54 * index, data.name + ': ' + this.player.dpsDmg, {
             font: '16px Arial Black',
             color: '#000',
           });
-          this.add.text(80, 116 + 54 * index, 'Cost: ' + data.cost, {
+          text = this.add.text(80, 116 + 54 * index, 'Cost: ' + data.cost, {
             font: '16px Arial Black',
             color: '#000',
           });
+          this.upgradeText.push(text);
           break;
       }
     });
@@ -241,8 +246,8 @@ class MainScene extends Phaser.Scene {
       monster.frame.updateUVs();
 
       // add data to sprite
-      monster.name = data.name;
       monster.data = {
+        name: data.name,
         maxHealth: data.maxHealth,
         health: data.maxHealth,
       };
@@ -277,8 +282,6 @@ class MainScene extends Phaser.Scene {
   dealDamage(damage: number) {
     // eslint-disable-next-line
     const data = this.currentMonster.data as any; // hacky way to handle unknown DataManager
-
-    // on click, player deals damage to the monster
     data.health = data.health - damage;
     this.currentMonster.data = data;
 
@@ -292,21 +295,41 @@ class MainScene extends Phaser.Scene {
   }
 
   reviveMonster() {
-    // get monster data from sprite
     // eslint-disable-next-line
-    const data = this.currentMonster.data as any;
-
-    // revives the monster if dead
+    const data = this.currentMonster.data as any; // hacky way to handle unknown DataManager
     data.health = data.maxHealth;
     this.currentMonster.data = data;
   }
 
-  updateText() {
-    // get monster data from sprite
-    // eslint-disable-next-line
-    const data = this.currentMonster.data as any;
+  getAdjustedCost(cost: number): number {
+    return Math.ceil(cost + (this.world.level - 1) * 5);
+  }
 
-    this.currentMonsterNameText.text = this.currentMonster.name;
+  nextLevel() {
+    // modify world values
+    this.world.level++;
+    this.world.currentKills = 0;
+    this.world.requiredKills += 10;
+
+    // strengthen monsters
+    this.monsterPool.getChildren().forEach((child) => {
+      // eslint-disable-next-line
+      const data = child.data as any; // hacky way to handle unknown DataManager
+      data.maxHealth = Math.ceil(data.maxHealth + (this.world.level - 1) * 10.6);
+      child.data = data;
+    });
+
+    // update cost text for upgrade buttons
+    this.upgradeText.forEach((upgrade: Phaser.GameObjects.Text, index: number) => {
+      upgrade.text = 'Cost: ' + this.getAdjustedCost(this.upgradeButtonData[index].cost);
+    });
+  }
+
+  updateText() {
+    // eslint-disable-next-line
+    const data = this.currentMonster.data as any; // hacky way to handle unknown DataManager
+
+    this.currentMonsterNameText.text = data.name;
     this.currentMonsterHealthText.text = data.health + ' HP';
     this.playerGoldText.text = 'Gold: ' + this.player.gold;
     this.playerDmgText.text = 'Attack: ' + this.player.clickDmg;
@@ -345,7 +368,7 @@ class MainScene extends Phaser.Scene {
       return;
     }
 
-    this.player.gold += 1;
+    this.player.gold += 1 + (this.world.level - 1) * 2;
     if (this.playerGoldText) {
       this.playerGoldText.text = 'Gold: ' + this.player.gold;
     }
@@ -353,8 +376,9 @@ class MainScene extends Phaser.Scene {
   }
 
   onClickUpgrade(data: Upgrade) {
-    if (this.player.gold - data.cost >= 0) {
-      this.player.gold -= data.cost;
+    const adjustedCost = this.getAdjustedCost(data.cost);
+    if (this.player.gold - adjustedCost >= 0) {
+      this.player.gold -= adjustedCost;
       data.purchaseHandler.call(this);
       this.updateText();
     }
@@ -370,9 +394,7 @@ class MainScene extends Phaser.Scene {
     // increment world statistics
     this.world.currentKills++;
     if (this.world.currentKills >= this.world.requiredKills) {
-      this.world.level++;
-      this.world.currentKills = 0;
-      this.world.requiredKills += 10;
+      this.nextLevel();
     }
     this.updateText();
 
