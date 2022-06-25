@@ -1,5 +1,11 @@
 # growdle
 
+## 0.5.0
+
+### Minor Changes
+
+- 22e37ec: add save/load feature
+
 ## 0.4.0
 
 ### Minor Changes
