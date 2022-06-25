@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 
-import { Player, World, Monster, Upgrade } from '../types';
+import { Player, World, Monster, Upgrade, SaveData } from '../types';
+import * as storage from '../storage';
 
 class MainScene extends Phaser.Scene {
   private screenCenterX: number;
@@ -98,6 +99,7 @@ class MainScene extends Phaser.Scene {
     this.load.image('gold_coin', '/assets/icons/I_GoldCoin.png');
     this.load.image('sword', '/assets/icons/S_Sword15.png');
     this.load.image('magic', '/assets/icons/S_Magic11.png');
+    this.load.image('book', '/assets/icons/W_Book05.png');
 
     // create upgrade panel texture
     const upgradePanelTexture = this.textures.createCanvas('upgradePanel', 200, 400); // origin is center
@@ -118,7 +120,14 @@ class MainScene extends Phaser.Scene {
     buttonTexture.refresh();
   }
 
-  create() {
+  create(data: SaveData) {
+    // load data if Load Game was pressed
+    if (Object.keys(data).length > 0) {
+      this.player = data.player;
+      this.world = data.world;
+      alert('Game data loaded!');
+    }
+
     // create coin sprites to show when monsters are defeated
     this.coinPool = this.add.group();
     this.coinPool.createMultiple({
@@ -225,6 +234,14 @@ class MainScene extends Phaser.Scene {
       }
     });
 
+    // create save button
+    this.add.image(110, 550, 'button').setInteractive().on('pointerdown', this.onSave.bind(this));
+    this.add.image(42, 550, 'book');
+    this.add.text(80, 542, 'Save', {
+      font: '16px Arial Black',
+      color: '#000',
+    });
+
     // create timer to deal auto damage every second
     this.time.addEvent({
       delay: 1000,
@@ -248,8 +265,8 @@ class MainScene extends Phaser.Scene {
       // add data to sprite
       monster.data = {
         name: data.name,
-        maxHealth: data.maxHealth,
-        health: data.maxHealth,
+        maxHealth: this.strengthenMonster(data.maxHealth),
+        health: this.strengthenMonster(data.maxHealth),
       };
 
       // move anchor to center of image
@@ -305,6 +322,10 @@ class MainScene extends Phaser.Scene {
     return Math.ceil(cost + (this.world.level - 1) * 5);
   }
 
+  strengthenMonster(maxHealth: number): number {
+    return Math.ceil(maxHealth + (this.world.level - 1) * 10.6);
+  }
+
   nextLevel() {
     // modify world values
     this.world.level++;
@@ -315,7 +336,7 @@ class MainScene extends Phaser.Scene {
     this.monsterPool.getChildren().forEach((child) => {
       // eslint-disable-next-line
       const data = child.data as any; // hacky way to handle unknown DataManager
-      data.maxHealth = Math.ceil(data.maxHealth + (this.world.level - 1) * 10.6);
+      data.maxHealth = this.strengthenMonster(data.maxHealth);
       child.data = data;
     });
 
@@ -412,6 +433,15 @@ class MainScene extends Phaser.Scene {
 
     // get a new monster
     this.getRandomMonster();
+  }
+
+  onSave() {
+    const data = {
+      player: this.player,
+      world: this.world,
+    };
+    storage.save(data);
+    alert('Game Saved!');
   }
 }
 
