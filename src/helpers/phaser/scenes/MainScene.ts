@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 
 import { Player, World, Monster, Upgrade, SaveData } from '../types';
-import { save } from '../storage';
+import * as storage from '../storage';
 
 class MainScene extends Phaser.Scene {
   private screenCenterX: number;
@@ -121,9 +121,11 @@ class MainScene extends Phaser.Scene {
   }
 
   create(data: SaveData) {
+    // load data if Load Game was pressed
     if (Object.keys(data).length > 0) {
       this.player = data.player;
       this.world = data.world;
+      alert('Game data loaded!');
     }
 
     // create coin sprites to show when monsters are defeated
@@ -233,7 +235,7 @@ class MainScene extends Phaser.Scene {
     });
 
     // create save button
-    this.add.image(110, 550, 'button').setInteractive().on('pointerdown', save);
+    this.add.image(110, 550, 'button').setInteractive().on('pointerdown', this.onSave.bind(this));
     this.add.image(42, 550, 'book');
     this.add.text(80, 542, 'Save', {
       font: '16px Arial Black',
@@ -431,6 +433,15 @@ class MainScene extends Phaser.Scene {
 
     // get a new monster
     this.getRandomMonster();
+  }
+
+  onSave() {
+    const data = {
+      player: this.player,
+      world: this.world,
+    };
+    storage.save(data);
+    alert('Game Saved!');
   }
 }
 

@@ -1,20 +1,22 @@
 import { SaveData } from '../types';
 
 export const save = (data: SaveData) => {
-  console.log('save');
+  window.localStorage.setItem('savedData', JSON.stringify(data));
 };
 
 export const load = (): SaveData => {
-  console.log('load');
-
+  const data = window.localStorage.getItem('savedData');
+  if (data) {
+    return JSON.parse(data);
+  }
   return {
     player: {
-      gold: 0,
       clickDmg: 1,
+      gold: 0,
       dpsDmg: 0,
     },
     world: {
-      level: 2,
+      level: 1,
       currentKills: 0,
       requiredKills: 10,
     },
