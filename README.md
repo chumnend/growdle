@@ -1,7 +1,7 @@
 # Growdle
 
 ## About 
-TBD
+An idle clicker game made using Typesctipt and Phaser 3. This was a small hobby game I made to familiarize myself with Phaser 3.
 
 All assets come from Opengameart.org
 
@@ -10,7 +10,7 @@ Monster sprites attributed to "Hero of Allacrost - http://www.allacrost.org"
 RPG Icons attributed to Henrique Lazarini (7Soul1)
 
 ### Demo
-TBD
+![Growdle Capture](growdle-capture.gif)
 
 ### Built With
 - Typescript
@@ -36,9 +36,6 @@ cp .env.example .env
 ```
 yarn start
 ```
-
-## License
-TBD
 
 ## Contact
 Nicholas Chumney - [nicholas.chumney@outlook.com](nicholas.chumney@outlook.com)
